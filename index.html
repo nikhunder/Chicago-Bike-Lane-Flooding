@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,7 +22,6 @@
             --red: #dc2626;
             --orange: #f97316;
             --yellow: #d97706;
-            --green: #16a34a;
         }
         
         body {
@@ -40,7 +38,6 @@
             height: 100vh;
         }
         
-        /* TOPBAR */
         .topbar {
             grid-column: 1/-1;
             background: #1a1a18;
@@ -88,7 +85,6 @@
         .metric.warn .val { color: #fbbf24; }
         .metric.bad .val { color: #f87171; }
         
-        /* SIDEBAR */
         .sidebar {
             background: var(--bg2);
             border-right: 1px solid var(--border);
@@ -147,7 +143,6 @@
             color: var(--muted);
         }
         
-        /* Map & Details */
         .map-wrap {
             position: relative;
             overflow: hidden;
@@ -195,9 +190,9 @@
             height: 9px;
             border-radius: 50%;
             flex-shrink: 0;
+            margin-top: 2px;
         }
         
-        /* Detail panel */
         .detail-panel {
             position: absolute;
             bottom: 0;
@@ -266,24 +261,11 @@
             color: var(--text);
         }
         
-        /* Flooding level colors */
         .level-5 { border-left-color: var(--red); }
         .level-4 { border-left-color: var(--orange); }
         .level-3 { border-left-color: var(--yellow); }
-        .level-2 { border-left-color: #84cc16; }
-        .level-1 { border-left-color: var(--green); }
-        
-        /* Popup */
-        .leaflet-popup-content {
-            font-size: 12px;
-        }
-        
-        .leaflet-popup-content-wrapper {
-            border-radius: 4px;
-        }
-        
-        .popup-h { font-weight: 600; margin-bottom: 4px; }
-        .popup-d { font-size: 11px; color: var(--text); margin-bottom: 3px; }
+        .level-2 { border-left-color: #eab308; }
+        .level-1 { border-left-color: #fbbf24; }
         
         @media (max-width: 768px) {
             .app { grid-template-columns: 1fr; }
@@ -294,7 +276,7 @@
 <body>
     <div class="app">
         <div class="topbar">
-            <h1>Bike Lane Flooding</h1>
+            <h1>🚴 Bike Lane Flooding</h1>
             <div class="metrics">
                 <div class="metric ok">
                     <div class="val" id="stat-locations">—</div>
@@ -317,17 +299,7 @@
         
         <div class="sidebar">
             <div class="sb-section">
-                <h3>Bike Lane Type Analysis</h3>
-                <div style="height: 200px; position: relative; margin-bottom: 10px;">
-                    <canvas id="bikelane-chart"></canvas>
-                </div>
-                <div style="font-size: 9px; color: var(--muted); line-height: 1.4;">
-                    Based on <strong>143 responses</strong> without specific locations
-                </div>
-            </div>
-            
-            <div class="sb-section">
-                <h3>Locations</h3>
+                <h3>📋 Locations</h3>
             </div>
             <div class="comments-list" id="sidebar-list"></div>
         </div>
@@ -379,71 +351,7 @@
     </div>
 
     <script>
-        // Bike lane type analysis data (from responses without locations)
-        const bikeLaneAnalysis = {
-            'Concrete': { avg: 3.60, count: 90 },
-            'Painted or Greenway': { avg: 3.86, count: 21 },
-            'Plastic Barrier': { avg: 3.58, count: 24 },
-            'Not sure': { avg: 3.75, count: 4 },
-            'Other': { avg: 2.25, count: 4 }
-        };
-
-        const surveyData = {
-            "2403 n Elston": {"avg_flooding": 5.0, "num_reports": 1, "bike_lane_type": "Concrete", "comments": [], "lat": 41.9234, "lng": -87.6890},
-            "3100 w Logan Blvd": {"avg_flooding": 3.0, "num_reports": 1, "bike_lane_type": "Concrete", "comments": [], "lat": 41.8993, "lng": -87.6858},
-            "1900 N Ashland Ave": {"avg_flooding": 4.44, "num_reports": 9, "bike_lane_type": "Plastic Barrier", "comments": ["Under the metra tracks, it gets really flooded there at the entrance to the bike lane so i have to merge into traffic until i get to the top of the hill near the intersection where i can the get back in the bike lane", "Due to the persistent flooding of this bike lane, there is also a buildup of dirt and debris in the bike lane that makes it impassable regardless of the water conditions. I consistently pass through this intersection, and feel unsafe going into the car lane due to the high volume of traffic, and going on the sidewalk is not ideal due to a couple steps down at the next street, which would be dangerous if you don't know that the steps are there. In the winter the bike lane here is consistently covered in a thick layer of ice. Please address the flooding here!! This is a very important bicycle thoroughfare!! Many cyclists who live in West Town use this route to get from the end of the 606 to the lakefront trail.", "Eastbound, east of the intersection, under the train tracks. Frequently flooded.", "This whole intersection has terrible drainage", "I'm worried this will start to damage the bridge foundation", "I've submitted this to 311 several times. It has been a problem since installed a few years ago. Bikers often take the lane which is dangerous as it requires illegally switching in the intersection, and drivers get angry that we aren't using the bike lane.", "This is a chronic flooding spot in a corridor heavily used by bikes."], "lat": 41.9097, "lng": -87.6637},
-            "3799 N Milwaukee Ave": {"avg_flooding": 4.0, "num_reports": 1, "bike_lane_type": "Concrete", "comments": [], "lat": 41.9457, "lng": -87.7042},
-            "4726 n Clark St": {"avg_flooding": 2.0, "num_reports": 1, "bike_lane_type": "Concrete", "comments": [], "lat": 41.9808, "lng": -87.6769},
-            "4400 N Clark": {"avg_flooding": 4.0, "num_reports": 1, "bike_lane_type": "Concrete", "comments": [], "lat": 41.9700, "lng": -87.6756},
-            "4001 n Clark St": {"avg_flooding": 5.0, "num_reports": 1, "bike_lane_type": "Concrete", "comments": ["This is often flooded, really a bummer because the protected bike lane is so nice to have"], "lat": 41.9630, "lng": -87.6729},
-            "2528 W Bloomingdale": {"avg_flooding": 4.0, "num_reports": 1, "bike_lane_type": "Other", "comments": ["This spot floods almost every time it rains, no matter how little. It takes days to drain and causes safety issues as bikers, walkers, and runners must navigate, often veering to the south side where it is shallower. Or they just ride through and splash everybody with mud. No other part of the 606 has this issue to my knowledge."], "lat": 41.9206, "lng": -87.6776}
-        };
-
-        // Initialize bike lane chart
-        const chartCanvas = document.getElementById('bikelane-chart');
-        const bikelaneChart = new Chart(chartCanvas, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(bikeLaneAnalysis),
-                datasets: [{
-                    label: 'Avg Flooding Level',
-                    data: Object.values(bikeLaneAnalysis).map(d => d.avg),
-                    backgroundColor: ['#f97316', '#d97706', '#f97316', '#d97706', '#d97706'],
-                    borderColor: '#ddd',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            afterLabel: (context) => {
-                                const type = context.label;
-                                const count = bikeLaneAnalysis[type].count;
-                                return `(${count} responses)`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        min: 0,
-                        max: 5,
-                        ticks: { font: { size: 9 } },
-                        grid: { drawBorder: false, color: '#f0f0f0' }
-                    },
-                    y: {
-                        ticks: { font: { size: 9 } },
-                        grid: { drawBorder: false, display: false }
-                    }
-                }
-            }
-        });
+        const surveyData = {"10 N Dearborn":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.629},"10 S Dearborn":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.629},"118 W. Washington":{"avg_flooding":2.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.883,"lng":-87.63},"1332 s Wabash":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.626},"1333 S Wabash":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.626},"150 W 18th - both sides of street":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.645},"1549 w Cortland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.91,"lng":-87.665},"1599 W Cortland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.91,"lng":-87.665},"1658 N Milwaukee Ave (southbound side)":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.68},"179 W Washington St":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.883,"lng":-87.63},"18 th st, west of Clark":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.645},"1830 n. Milwaukee":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.68},"1855 N. Milwaukee":{"avg_flooding":4.0,"num_reports":2,"bike_lane_type":"Concrete","comments":[],"lat":41.914,"lng":-87.665},"1859 n milwaukee":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.68},"1875 N. Milwaukee":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.68},"1900 N Ashland Ave":{"avg_flooding":4.44,"num_reports":9,"bike_lane_type":"Plastic Barrier","comments":["Under the metra tracks, it gets really flooded there at the entrance to the bike lane so i have to merge into traffic until i get to the top of the hill near the intersection where i can the get back in the bike lane","Due to the persistent flooding of this bike lane, there is also a buildup of dirt and debris in the bike lane that makes it impassable regardless of the water conditions. I consistently pass through this intersection, and feel unsafe going into the car lane due to the high volume of traffic, and going on the sidewalk is not ideal due to a couple steps down at the next street, which would be dangerous if you don't know that the steps are there. In the winter the bike lane here is consistently covered in a thick layer of ice. Please address the flooding here!! This is a very important bicycle thoroughfare!! Many cyclists who live in West Town use this route to get from the end of the 606 to the lakefront trail.","Eastbound, east of the intersection, under the train tracks. Frequently flooded.","This whole intersection has terrible drainage","I'm worried this will start to damage the bridge foundation","I've submitted this to 311 several times. It has been a problem since installed a few years ago. Bikers often take the lane which is dangerous as it requires illegally switching in the intersection, and drivers get angry that we aren't using the bike lane.","This is a chronic flooding spot in a corridor heavily used by bikes."],"lat":41.9097,"lng":-87.6637},"2000 North Marshall Boulevard":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.88,"lng":-87.68},"2200 West Lake Street":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.88,"lng":-87.681},"2200 block of Augusta":{"avg_flooding":4.0,"num_reports":2,"bike_lane_type":"Concrete","comments":[],"lat":41.899,"lng":-87.67},"2300 block of north Milwaukee":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.68},"2384 W Sunnyside Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.948,"lng":-87.69},"2400 block of Grand Avenue":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.891,"lng":-87.67},"2403 n Elston":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9234,"lng":-87.689},"2416 N Elston Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9246,"lng":-87.6898},"2512 N Milwaukee":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.927,"lng":-87.68},"2512 N Milwaukee Ave, in front of Jeni's Ice Cream":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.927,"lng":-87.68},"2515 S. Halsted":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.852,"lng":-87.645},"2528 W Bloomingdale":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Other","comments":["This spot floods almost every time it rains, no matter how little. It takes days to drain and causes safety issues as bikers, walkers, and runners must navigate, often veering to the south side where it is shallower. Or they just ride through and splash everybody with mud. No other part of the 606 has this issue to my knowledge."],"lat":41.9206,"lng":-87.6776},"2600 West Lake Street":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.88,"lng":-87.656},"2847 w division":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.905,"lng":-87.68},"2900 block of Belmont, eastbound lanes":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.9393,"lng":-87.685},"2933 W Division":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.905,"lng":-87.68},"3098 W Division St":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.905,"lng":-87.68},"3100 w Logan Blvd":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.8993,"lng":-87.6858},"3129 W Division":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.905,"lng":-87.68},"3202 n. Milwaukee":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.68},"3700 & 3800 block of Milwaukee Ave, underneath the rail bridges":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.946,"lng":-87.704},"3734 W Belmont Ave":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.939,"lng":-87.685},"3800 N Milwaukee Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.946,"lng":-87.704},"3939 s kedzie":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.852,"lng":-87.705},"4001 n Clark St":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Concrete","comments":["This is often flooded, really a bummer because the protected bike lane is so nice to have"],"lat":41.963,"lng":-87.6729},"4400 N Clark":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.97,"lng":-87.6756},"4714 N Clatk":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.981,"lng":-87.676},"4726 n Clark St":{"avg_flooding":2.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9808,"lng":-87.6769},"4800 block of Rockwell":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.885,"lng":-87.695},"4918 n clark":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.985,"lng":-87.676},"500 block of S Clinton":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.875,"lng":-87.648},"500 E randolph":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.885,"lng":-87.615},"530 W Harrison St":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.874,"lng":-87.648},"55th just east of Lake Park, under viaduct":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.8045,"lng":-87.5914},"644 N Clark":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.888,"lng":-87.627},"6030 N Clark St":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9846,"lng":-87.6759},"71st from about Dorchester, west to Cottage":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.7650,"lng":-87.61},"808 N Dearborn":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.629},"811 S Wabash":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.626},"Archer and Pershing, northwest on archer":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.82,"lng":-87.675},"Armitage just past the intersection with Elston":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.917,"lng":-87.655},"Ashland & Cortland going East on Cortland under the bridge":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9098,"lng":-87.6637},"Ashland and Cortland (south east corner)":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9098,"lng":-87.6637},"Ashland and Courland St., before Bealy St.":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.9098,"lng":-87.6637},"Belmont & Kedzie underpass":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Concrete","comments":["floods westbound, filthy both directions"],"lat":41.9393,"lng":-87.705},"Belmont and Ridgeway":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.9393,"lng":-87.695},"Clybourn (heading northwest) between Larabee & Schiller":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.895,"lng":-87.645},"Clybourn at Ashland, eastbound":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.895,"lng":-87.645},"Clybourn between Halsted and Division":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.895,"lng":-87.645},"Clark Street north of Lawrence, south of Ainslie":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.968,"lng":-87.68},"Clark between Irving Park and Montrose (E Side)":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9563,"lng":-87.6756},"Clark between Leland and Lawrence on the east side":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.968,"lng":-87.68},"Cortland & Ashland eastbound under bridge":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Cortland and Ashland":{"avg_flooding":4.0,"num_reports":3,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Cortland Ave at Ashland (E side of intersection)":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Cortland St. under 94 overpass, between Marshfield and Ashland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.91,"lng":-87.685},"Cortland just east of Ashland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Cortland underneath I-90":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.91,"lng":-87.685},"Courtland and Ashland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Damen, north of Irving Park, West side of street":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9150,"lng":-87.675},"Damen underneath 606 trail -- both sides of the street -- east side worse":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9150,"lng":-87.675},"Division St, west of Sacramento Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.905,"lng":-87.705},"East side of Cortland and Ashland under the viaduct":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"East side of Clarke and Montrose by the cemetery":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9563,"lng":-87.676},"Eastbound bike lane on W. Cortland Street at the Intersection with Ashland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Eastbound Cortland at Ashland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Eastbound Cortland bike lane, immediately east of Ashland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Eastbound Cortland bike lane, just east of Ashland Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Elston heading southeast, just north of Fullerton (the bend in the road in front of the Chick-fil-A)":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9250,"lng":-87.685},"Intersection of Cortland and Ashland":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Intersection of Cortland and Ashland, especially the south east corner":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Intersection of N Ashland Ave and W Cortland Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Intersection of 31st St and Indiana Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.835,"lng":-87.62},"Humboldt Drive/Sacramento - North of Grand Ave":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.865,"lng":-87.69},"Halfway between 116th and Stony Island and 122nd st and Stony Island":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.695,"lng":-87.59},"Intersection of Ashland and Cortland (Under the metra tracks)":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.9098,"lng":-87.6637},"Leavitt and Milwaukee Ave consistently floods. Under the 606.":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.69},"Leavitt and wabansia":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.91,"lng":-87.69},"Lincoln Ave approaching Irving Park/Damen/Lincoln intersection":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.954,"lng":-87.715},"Logan blvd under 94 overpass":{"avg_flooding":5.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.899,"lng":-87.686},"Loomis, just south of Cermak on the north bound side":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.852,"lng":-87.66},"Milwaukee Ave between Belmont and Addison":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.934,"lng":-87.68},"Milwaukee ave and wood":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.88,"lng":-87.67},"Near the Ace hardware":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.885,"lng":-87.645},"North side of 18th street, between Clark and Wentworth":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.635},"North side of Milwaukee Ave east of Oakley Ave, near Torn Light Records":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.685},"Northbound bike lane on Wabash just south of the intersection with Balbo":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.626},"Northbound Elston approaching Fullerton":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.925,"lng":-87.685},"Northbound Milwaukee. Just south of Oakley":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.685},"Northbound on Wabash between 13 and 14th":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.626},"NB Milwaukee after Chicago Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9140,"lng":-87.676},"NW corner state and 18th":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.627},"NW-bound Elston ave, north of Fullerton":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.925,"lng":-87.685},"On Clark street between Argyle and Ainslie":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9660,"lng":-87.68},"On the elston curve between Fullerton and damen going towards the Loop. Its always flooded right by Chick Fil A":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.925,"lng":-87.685},"Sacramento and Augusta":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.8700,"lng":-87.705},"Sacramento and Grand":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.8910,"lng":-87.705},"South of the intersection at Elston and Kedzie next to Jewel":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.925,"lng":-87.705},"Southbound 4000 block on N Damen ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.915,"lng":-87.675},"Southeast bike lane on Armitage just past the intersection with Elston":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.917,"lng":-87.655},"W Augusta Blvd and N Marshfield Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.8988,"lng":-87.6707},"W. Cortland Street, below the kennedy expressway":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.91,"lng":-87.685},"W lake Ave east of n damen":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.88,"lng":-87.675},"Wabash between 13th and 14th":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.626},"Wabash between 8th and 9th north bound":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.88,"lng":-87.626},"Wabash bike lane south of 8th street until Roosevelt":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.836,"lng":-87.626},"W. Roscoe St & N Campbell Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.944,"lng":-87.71},"18th Street between Clark and Wentworth, westbound lane":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.635},"18 th st, west of Clark":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.645},"18th street between Clark and Wentworth":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.635},"18th street under I-90/Dan Ryan":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.635},"18th st between Clark and Wentworth, Chicago, IL":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.635},"18th st both west and east bound between Clark and wentworth":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.635},"18 th st, west of Clark, Chicago, IL":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.859,"lng":-87.645},"24 W Randolph St":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Plastic Barrier","comments":[],"lat":41.885,"lng":-87.63},"Copeland bike lane eastbound just east of Ashland at":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.91,"lng":-87.66},"200 block of Cental Park Avenue, between Lake and Fulton":{"avg_flooding":3.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.850,"lng":-87.715},"200 W Randolph just west of Wells":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.885,"lng":-87.63},"Augusta and Wood, southeast corner":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.8987,"lng":-87.67},"2 blocks of Campbell from Belmont to Roscoe by DePaul high school campus":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.94,"lng":-87.71},"Bloomingdale Trail - 1 block west of western":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Painted or Greenway","comments":[],"lat":41.92,"lng":-87.715},"3799 N Milwaukee Ave":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9457,"lng":-87.7042},"Cortland St. under 94 overpass, between Marshfield and Ashland, Chicago, IL":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.91,"lng":-87.685},"Ashland and Cortland (under the metra tracks), Chicago, IL":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9098,"lng":-87.6637},"Milwaukee on the block north of California.":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.92,"lng":-87.68},"Intersection of Cortland and Ashland, Chicago, IL":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.9098,"lng":-87.6637},"Wrightwood and Spaulding":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.93,"lng":-87.72},"kedzie and montrose in front of BP":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.961,"lng":-87.705},"under bridge south of western on archer":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.82,"lng":-87.685},"Cyclist entitlement must be millennial":{"avg_flooding":1.0,"num_reports":1,"bike_lane_type":"Not sure","comments":[],"lat":41.8781,"lng":-87.6298},"Flodding all along bike land on 71st from about Dorchester, west to Cottage.":{"avg_flooding":4.0,"num_reports":1,"bike_lane_type":"Concrete","comments":[],"lat":41.765,"lng":-87.61}};
 
         const map = L.map('map').setView([41.95, -87.68], 12);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -469,7 +377,7 @@
             document.getElementById('detail-reports').textContent = data.num_reports;
             document.getElementById('detail-type').textContent = data.bike_lane_type;
             
-            const commentsHtml = data.comments.length > 0
+            const commentsHtml = data.comments.length > 0 && data.comments[0]
                 ? data.comments.map(c => `<div class="detail-comment-text">"${c}"</div>`).join('')
                 : '<div class="detail-comment-text" style="color: #888; font-style: italic;">No comments</div>';
             
@@ -505,7 +413,7 @@
             sidebarList.appendChild(row);
 
             totalReports += data.num_reports;
-            totalComments += data.comments.length;
+            totalComments += data.comments.length > 0 && data.comments[0] ? data.comments.length : 0;
         });
 
         const avg = (Object.values(surveyData).reduce((s, d) => s + d.avg_flooding, 0) / Object.keys(surveyData).length).toFixed(1);
